@@ -1,16 +1,15 @@
 import axios from 'axios';
-import { getToken } from './auth'; // Adjust the path as necessary
+import { getToken } from './auth'; // Import the updated getToken from auth.js
 
 const instance = axios.create({
-  baseURL: '/', // Your spring boot backend url
+  baseURL: 'http://localhost:8081', // Your backend URL
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Attach JWT to requests if available
 instance.interceptors.request.use((config) => {
-  const token = getToken(); // Ensure getToken is defined and imported
+  const token = getToken();  // Get the token from sessionStorage
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }

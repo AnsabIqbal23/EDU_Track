@@ -19,16 +19,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/utils/cn";
 import Cookies from 'js-cookie'; // Import js-cookie to handle cookies
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
+import {removeData} from "@/utils/auth"; // Import useRouter
 
 export default function StudentSidebar() {
 
 
   const router = useRouter(); // Initialize useRouter
-
-  const removeToken = () => {
-    Cookies.remove('token'); // Remove the token from cookies
-  };
 
   const handleDashboard = () => {
     router.push('/studentPage/dashboard');
@@ -46,7 +43,7 @@ export default function StudentSidebar() {
     router.push("/studentPage/timetable");
   };
 
-  const handleExamSchedule = () => {
+  const handleExamschedule = () => {
     router.push("/studentPage/examSchedule");
   };
 
@@ -71,8 +68,8 @@ export default function StudentSidebar() {
   };
 
   const handleLogout = () => {
-    removeToken();  // Remove token from cookies/localStorage
-    router.push('/auth/login');  // Redirect to login page
+    removeData();
+    router.push('/auth/login');
   };
 
   const links = [
@@ -114,7 +111,7 @@ export default function StudentSidebar() {
       icon: (
           <IconCalendar className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
-      onClick: handleExamSchedule,
+      onClick: handleExamschedule,
     },
     {
       label: "Assignment",
@@ -214,4 +211,4 @@ export const LogoIcon = () => {
             className="h-5 w-6 bg-black dark:bg-white rounded-br-lg rounded-tr-sm rounded-tl-lg rounded-bl-sm flex-shrink-0" />
       </Link>)
   );
-};  
+};

@@ -10,7 +10,7 @@ import {
   IconCalendar,
   IconBook,
   IconCertificate,
-  IconCoin
+  IconCoin, IconClipboardList
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -26,6 +26,42 @@ export default function ParentSidebar() {
     Cookies.remove('token'); // Remove the token from cookies
 };
 
+  const handleDashboard = () => {
+    router.push('/parentPage/dashboard');
+  };
+
+  const handleAttendance = () => {
+    router.push("/parentPage/attendance");
+  };
+
+  const handleMarks = () => {
+    router.push("/parentPage/marks");
+  };
+
+  const handleTimetable = () => {
+    router.push("/parentPage/timetable");
+  };
+
+  const handleExam = () => {
+    router.push("/parentPage/exam");
+  };
+
+  const handleAssignment = () => {
+    router.push("/parentPage/assignments");
+  };
+
+  const handleCourses = () => {
+    router.push("/parentPage/courses");
+  };
+
+  const handleTranscript = () => {
+    router.push("/parentPage/transcript");
+  };
+
+  const handleFees = () => {
+    router.push("/parentPage/fees");
+  };
+
   const handleLogout = () => {
     removeToken();  // Remove token from cookies/localStorage
     router.push('/auth/login');  // Redirect to login page
@@ -38,6 +74,7 @@ export default function ParentSidebar() {
       icon: (
         <IconBrandTabler className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleDashboard,
     },
     {
       label: "Attendance",
@@ -45,6 +82,7 @@ export default function ParentSidebar() {
       icon: (
         <IconCheckupList className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleAttendance,
     },
     {
       label: "Marks",
@@ -52,6 +90,7 @@ export default function ParentSidebar() {
       icon: (
         <IconReportAnalytics className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleMarks,
     },
     {
       label: "Time Table",
@@ -59,6 +98,7 @@ export default function ParentSidebar() {
       icon: (
         <IconClock className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleTimetable,
     },
     {
       label: "Exam Schedule",
@@ -66,6 +106,15 @@ export default function ParentSidebar() {
       icon: (
         <IconCalendar className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleExam,
+    },
+    {
+      label: "Assignment",
+      href: "#",
+      icon: (
+          <IconClipboardList className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+      onClick: handleAssignment,
     },
     {
       label: "Courses",
@@ -73,13 +122,15 @@ export default function ParentSidebar() {
       icon: (
         <IconBook className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleCourses,
     },
     {
-      label: "Transcript",
+      label: "transcript",
       href: "#",
       icon: (
         <IconCertificate className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleTranscript,
     },
     {
       label: "Fees",
@@ -87,6 +138,7 @@ export default function ParentSidebar() {
       icon: (
         <IconCoin className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
+      onClick: handleFees,
     },
     {
       label: "Logout",
@@ -116,7 +168,6 @@ export default function ParentSidebar() {
           </div>
         </SidebarBody>
       </Sidebar>
-      <Dashboard />
     </div>)
   );
 }
@@ -147,27 +198,3 @@ export const LogoIcon = () => {
   );
 };
 
-// Dummy dashboard component with content
-const Dashboard = () => {
-  return (
-    (<div className="flex flex-1">
-      <div
-        className="p-2 md:p-10 rounded-tl-2xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 flex flex-col gap-2 flex-1 w-full h-full">
-        <div className="flex gap-2">
-          {[...new Array(4)].map((i) => (
-            <div
-              key={"first-array" + i}
-              className="h-20 w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"></div>
-          ))}
-        </div>
-        <div className="flex gap-2 flex-1">
-          {[...new Array(2)].map((i) => (
-            <div
-              key={"second-array" + i}
-              className="h-full w-full rounded-lg  bg-gray-100 dark:bg-neutral-800 animate-pulse"></div>
-          ))}
-        </div>
-      </div>
-    </div>)
-  );
-};

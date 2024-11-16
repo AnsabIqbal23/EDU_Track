@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
 import axios from 'axios';
 
 const ProtectedPage = () => {
@@ -12,36 +11,45 @@ const ProtectedPage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = Cookies.get('token');
-
-                if (!token) {
-                    throw new Error('No token found');
+                // Retrieve and parse userData from sessionStorage
+                const userData = sessionStorage.getItem('userData');
+                if (!userData) {
+                    throw new Error('User data is missing from sessionStorage');
                 }
 
-                // Send the token to the backend to get role and status
-                const response = await axios.get('/api/auth/protected', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const parsedUserData = JSON.parse(userData);
+                const { accessToken, expiration, roles } = parsedUserData;
 
-                const { role, status } = response.data.user;  // Get role and status from backend
+                // Check if token exists and is not expired
+                if (!accessToken) {
+                    throw new Error('Token is missing');
+                }
+                if (Date.now() > expiration) {
+                    throw new Error('Token is expired');
+                }
 
-                // Redirect logic based on role and status
-                if (role === 'admin') {
-                    await router.push('/adminPage');
-                } else if (role === 'teacher') {
-                    await router.push('/teacherPage');
-                } else if (role === 'librarian') {
-                    await router.push('/librarianPage');
-                }else if (role === 'parent') {
-                    await router.push('/parentPage');
-                }else if (role === 'student') {
-                    if (status === 'pending') {
-                        setMessage('Your account is pending approval. Please contact admin for more information.');
-                    } else if (status === 'approved') {
-                        await router.push('/studentPage/dashboard');
-                    }
+                // Verify roles exist
+                if (!roles || roles.length === 0) {
+                    throw new Error('User roles are missing');
+                }
+
+                // Check the role and redirect based on it
+                const role = roles[0];
+
+                // Redirect logic based on role
+                if (role === 'ROLE_ADMIN') {
+                    router.push('/adminPage/dashboard');
+                } else if (role === 'ROLE_TEACHER') {
+                    router.push('/teacherPage/dashboard');
+                } else if (role === 'ROLE_LIBRARIAN') {
+                    router.push('/librarianPage/dashboard');
+                } else if (role === 'ROLE_PARENT') {
+                    router.push('/parentPage/dashboard');
+                } else if (role === 'ROLE_STUDENT') {
+                    router.push('/studentPage/dashboard');
                 }
             } catch (err) {
+                console.error("Error in fetchData:", err.message);
                 setError('You are not authorized to view this page');
                 router.push('/auth/login');
             }

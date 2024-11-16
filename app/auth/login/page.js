@@ -1,12 +1,12 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';  // Add this import
+import axios from 'axios';
 import { Label } from "./label";
 import { Input } from "./inputs";
 import { cn } from "@/utils/cn";
-import { useState } from 'react';
-import axios from '@/utils/axios';
-import { useRouter } from 'next/navigation';
-import Cookies from 'js-cookie';
+import { BottomGradient } from '@/components/ui/BottomGradient';
 
 export default function SignInForm() {
   const [email, setEmail] = useState('');
@@ -17,14 +17,17 @@ export default function SignInForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post('/api/auth', { email, password }); // Correctly target the login endpoint
-
-      const token = response.data.token; // Extract the token from response data
-
-      // Set token in cookies
-      Cookies.set('token', token, { secure: true, httpOnly: false });
-      console.log(response.data);
-
+      const response = await axios.post('http://localhost:8081/api/auth/login', { email, password });
+      const { accessToken, expiration, roles, id, username } = response.data; // include id
+      const absoluteExpiration = Date.now() + expiration;
+      const userData = {
+        accessToken,
+        roles,
+        id, // store id in userData
+        username,
+        expiration: absoluteExpiration,
+      };
+      sessionStorage.setItem('userData', JSON.stringify(userData));
       router.push('/auth/protected');
     } catch (error) {
       console.error('Error:', error.response ? error.response.data : error.message);
@@ -32,58 +35,98 @@ export default function SignInForm() {
     }
   };
 
-
   return (
-    (<div className="flex justify-center items-center min-h-screen">
-      <div className="max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white dark:bg-black">
-        <h2 className="font-bold text-xl text-neutral-800 dark:text-neutral-200">
-          Welcome to EDU Track
-        </h2>
-        <p>
-          Login to EDU Track if you already have an account
-        </p>
-        <form className="my-8" onSubmit={handleSubmit}>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="email">Email Address</Label>
-            <Input id="email" placeholder="Email Address" type="email" onChange={(e) => setEmail(e.target.value)} required />
-          </LabelInputContainer>
-          <LabelInputContainer className="mb-4">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" placeholder="Password" type="password" onChange={(e) => setPassword(e.target.value)} required />
-          </LabelInputContainer>
+      <div
+          className="min-h-screen flex justify-center items-center bg-cover bg-center bg-no-repeat"
+          style={{
+            backgroundImage: "url('/images/bg.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+          }}
+      >
+        {/* Add an overlay to improve text readability */}
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
 
-          <button
-            className="bg-gradient-to-br relative group/btn from-black dark:from-zinc-900 dark:to-zinc-900 to-neutral-600 block dark:bg-zinc-800 w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:shadow-[0px_1px_0px_0px_var(--zinc-800)_inset,0px_-1px_0px_0px_var(--zinc-800)_inset]"
-            type="submit">
-            Log in &rarr;
-            <BottomGradient />
-          </button>
+        {/* Form container with glass effect */}
+        <div className="relative z-10 max-w-md w-full mx-auto rounded-none md:rounded-2xl p-4 md:p-8 shadow-input bg-white/10 backdrop-blur-md dark:bg-black/20">
+          <h2 className="font-bold text-3xl text-white mb-2">
+            Welcome to EDU Track
+          </h2>
+          <p className="text-gray-200 mb-6">
+            Login to EDU Track if you already have an account
+          </p>
 
-          <div
-            className="bg-gradient-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-[1px] w-full" />
-        </form>
-        {error && <p>{error}</p>}
+          <form className="my-8" onSubmit={handleSubmit}>
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="email" className="text-white">Email Address</Label>
+              <Input
+                  id="email"
+                  placeholder="Email Address"
+                  type="email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+              />
+            </LabelInputContainer>
+
+            <LabelInputContainer className="mb-4">
+              <Label htmlFor="password" className="text-white">Password</Label>
+              <Input
+                  id="password"
+                  placeholder="Password"
+                  type="password"
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-300"
+              />
+            </LabelInputContainer>
+
+            <button
+                className="bg-gradient-to-br relative group/btn from-blue-600 to-blue-800 block w-full text-white rounded-md h-10 font-medium shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] hover:from-blue-700 hover:to-blue-900 transition-all duration-300"
+                type="submit">
+              Log in &rarr;
+              <BottomGradient />
+            </button>
+
+            <div className="bg-gradient-to-r from-transparent via-white/20 to-transparent my-8 h-[1px] w-full" />
+
+            {/* Signup redirect section */}
+            <div className="text-center">
+              <p className="text-gray-200 mb-4">Don't have an account?</p>
+              <Link
+                  href="/auth/signup"
+                  className="inline-flex items-center justify-center px-6 py-2 border border-white/30 rounded-md text-white hover:bg-white/10 transition-colors duration-300 group"
+              >
+                Create Account
+                <svg
+                    className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                >
+                  <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </Link>
+            </div>
+          </form>
+
+          {error && (
+              <div className="mt-4">
+                <p className="text-red-400 text-center bg-red-400/10 py-2 rounded-md">{error}</p>
+              </div>
+          )}
+        </div>
       </div>
-    </div>)
   );
 }
 
-const BottomGradient = () => {
-  return (<>
-    <span
-      className="group-hover/btn:opacity-100 block transition duration-500 opacity-0 absolute h-px w-full -bottom-px inset-x-0 bg-gradient-to-r from-transparent via-cyan-500 to-transparent" />
-    <span
-      className="group-hover/btn:opacity-100 blur-sm block transition duration-500 opacity-0 absolute h-px w-1/2 mx-auto -bottom-px inset-x-10 bg-gradient-to-r from-transparent via-indigo-500 to-transparent" />
-  </>);
-};
-
-const LabelInputContainer = ({
-  children,
-  className
-}) => {
-  return (
-    (<div className={cn("flex flex-col space-y-2 w-full", className)}>
+const LabelInputContainer = ({ children, className }) => (
+    <div className={cn("flex flex-col space-y-2 w-full", className)}>
       {children}
-    </div>)
-  );
-};
+    </div>
+);
