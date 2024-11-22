@@ -107,46 +107,6 @@ const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[
-                {
-                  title: "Total Students",
-                  value: "250",
-                  icon: Users,
-                  color: "bg-blue-600",
-                  increase: "+12% from last month"
-                },
-                {
-                  title: "New Registrations",
-                  value: "15",
-                  icon: UserPlus,
-                  color: "bg-green-600",
-                  increase: "+5% from last week"
-                },
-                {
-                  title: "Upcoming Events",
-                  value: "3",
-                  icon: Calendar,
-                  color: "bg-purple-600",
-                  increase: "Next event in 2 days"
-                }
-              ].map((item, index) => (
-                  <Card key={index} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <CardTitle className="text-white font-medium">{item.title}</CardTitle>
-                      <item.icon className={`h-5 w-5 ${item.color} rounded p-1 text-white`} />
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <p className="text-2xl font-bold text-white">{item.value}</p>
-                        <p className="text-sm text-gray-400">{item.increase}</p>
-                        <Progress value={75} className={`h-1 ${item.color}`} />
-                      </div>
-                    </CardContent>
-                  </Card>
-              ))}
-            </div>
           </main>
         </div>
       </div>

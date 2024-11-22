@@ -57,7 +57,7 @@ export default function AdminAddTeacher() {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}` // Include the Bearer token here
+                    "Authorization": `Bearer ${token}`
                 },
                 body: JSON.stringify(formData),
             });
