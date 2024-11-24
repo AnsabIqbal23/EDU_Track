@@ -108,46 +108,6 @@ const LibrarianDashboard = () => {
                             </div>
                         </CardContent>
                     </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            {
-                                title: "Total Books",
-                                value: "5,320",
-                                icon: Book,
-                                color: "bg-purple-600",
-                                increase: "+1% from last month"
-                            },
-                            {
-                                title: "Books Issued Today",
-                                value: "120",
-                                icon: UserCheck,
-                                color: "bg-green-600",
-                                increase: "+8% from yesterday"
-                            },
-                            {
-                                title: "Overdue Books",
-                                value: "45",
-                                icon: AlertCircle,
-                                color: "bg-red-600",
-                                increase: "15 overdue this week"
-                            }
-                        ].map((item, index) => (
-                            <Card key={index} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                    <CardTitle className="text-white font-medium">{item.title}</CardTitle>
-                                    <item.icon className={`h-5 w-5 ${item.color} rounded p-1 text-white`} />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <p className="text-2xl font-bold text-white">{item.value}</p>
-                                        <p className="text-sm text-gray-400">{item.increase}</p>
-                                        <Progress value={75} className={`h-1 ${item.color}`} />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
                 </main>
             </div>
         </div>

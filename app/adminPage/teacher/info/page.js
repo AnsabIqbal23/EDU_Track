@@ -2,23 +2,30 @@
 
 import { useState } from 'react'
 import AdminSidebar from "@/components/admin/sidebar"
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
 export default function AdminTeacherDetails() {
     const [teacherId, setTeacherId] = useState('')
-    const [teacherData, setTeacherData] = useState(null)
+    const [teacherInfo, setTeacherInfo] = useState(null)
+    const [sections, setSections] = useState([])
     const [errorMessage, setErrorMessage] = useState(null)
-    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
 
     const fetchTeacherDetails = async () => {
+        if (!teacherId.trim()) {
+            setErrorMessage("Teacher ID cannot be empty.")
+            return
+        }
+
+        setLoading(true)
+        setErrorMessage(null)
         try {
             const userData = sessionStorage.getItem('userData')
 
             if (!userData) {
-                setErrorMessage("No userData found in session storage")
+                setErrorMessage("No userData found in session storage.")
                 return
             }
 
@@ -26,7 +33,7 @@ export default function AdminTeacherDetails() {
             const token = parsedData.accessToken
 
             if (!token) {
-                setErrorMessage("No token found in userData")
+                setErrorMessage("No token found in userData.")
                 return
             }
 
@@ -39,15 +46,22 @@ export default function AdminTeacherDetails() {
 
             if (response.ok) {
                 const data = await response.json()
-                setTeacherData(data)
-                setIsDialogOpen(true)
+                setTeacherInfo(data.teacherInfo)
+                setSections(data.sections)
+                setErrorMessage(null)
             } else {
                 const errorData = await response.json()
                 setErrorMessage(errorData.message || "Failed to fetch teacher details.")
+                setTeacherInfo(null)
+                setSections([])
             }
         } catch (error) {
             setErrorMessage("An error occurred while fetching teacher details.")
             console.error("Error:", error)
+            setTeacherInfo(null)
+            setSections([])
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -72,7 +86,7 @@ export default function AdminTeacherDetails() {
                             </div>
                         )}
 
-                        <div className="bg-[#1c2237] rounded-lg overflow-hidden p-6">
+                        <div className="bg-[#1c2237] rounded-lg overflow-hidden p-6 mb-8">
                             <div className="grid gap-4">
                                 <Label htmlFor="teacherId" className="text-white">Teacher ID</Label>
                                 <Input
@@ -82,60 +96,74 @@ export default function AdminTeacherDetails() {
                                     placeholder="Enter teacher ID"
                                     className="bg-[#2c3547] text-white"
                                 />
-                                <Button onClick={fetchTeacherDetails} className="mt-4">Search Teacher</Button>
+                                <Button onClick={fetchTeacherDetails} className="mt-4" disabled={loading}>
+                                    {loading ? "Loading..." : "Search Teacher"}
+                                </Button>
                             </div>
                         </div>
 
-                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                            <DialogContent className="sm:max-w-[425px]">
-                                <DialogHeader>
-                                    <DialogTitle>Teacher Details</DialogTitle>
-                                </DialogHeader>
-                                <div className="grid gap-4 py-4">
-                                    {teacherData ? (
-                                        <div>
-                                            <div className="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <Label>Username</Label>
-                                                    <p>{teacherData.username}</p>
-                                                </div>
-                                                <div>
-                                                    <Label>Email</Label>
-                                                    <p>{teacherData.email}</p>
-                                                </div>
-                                                <div>
-                                                    <Label>Department</Label>
-                                                    <p>{teacherData.department}</p>
-                                                </div>
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-4 mt-4">
-                                                <div>
-                                                    <Label>Office Hours</Label>
-                                                    <p>{teacherData.officeHours}</p>
-                                                </div>
-                                                <div>
-                                                    <Label>Qualification</Label>
-                                                    <p>{teacherData.qualification}</p>
-                                                </div>
-                                                <div>
-                                                    <Label>Specialization</Label>
-                                                    <p>{teacherData.specialization}</p>
-                                                </div>
-                                                <div>
-                                                    <Label>Courses</Label>
-                                                    <p>{teacherData.courses}</p>
-                                                </div>
-                                            </div>
+                        {teacherInfo && (
+                            <div className="bg-[#1c2237] rounded-lg overflow-hidden p-6 text-white">
+                                <h2 className="text-2xl font-bold mb-4">Teacher Details</h2>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <Label>Username</Label>
+                                        <p>{teacherInfo.username}</p>
+                                    </div>
+                                    <div>
+                                        <Label>Email</Label>
+                                        <p>{teacherInfo.email}</p>
+                                    </div>
+                                    <div>
+                                        <Label>Department</Label>
+                                        <p>{teacherInfo.department}</p>
+                                    </div>
+                                    <div>
+                                        <Label>Office Hours</Label>
+                                        <p>{teacherInfo.officeHours}</p>
+                                    </div>
+                                    <div>
+                                        <Label>Qualification</Label>
+                                        <p>{teacherInfo.qualification}</p>
+                                    </div>
+                                    <div>
+                                        <Label>Specialization</Label>
+                                        <p>{teacherInfo.specialization || "N/A"}</p>
+                                    </div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold mb-4">Sections and Courses</h2>
+                                        <div className="mb-6">
+                                            <Label>Sections</Label>
+                                            {sections.length > 0 ? (
+                                                <ul className="list-disc ml-6">
+                                                    {sections.map((section) => (
+                                                        <li key={section.sectionId}>
+                                                            <strong>Section: </strong> {section.sectionName} ( {section.sectionId} )
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p>No sections available.</p>
+                                            )}
                                         </div>
-                                    ) : (
-                                        <p>No teacher data available.</p>
-                                    )}
+                                        <div>
+                                            <Label>Courses</Label>
+                                            {sections.length > 0 ? (
+                                                <ul className="list-disc ml-6">
+                                                    {sections.map((section) => (
+                                                        <li key={section.sectionId}>
+                                                            <strong>Course: </strong> {section.courseName} ( {section.courseId} )
+                                                        </li>
+                                                    ))}
+                                                </ul>
+                                            ) : (
+                                                <p>No courses available.</p>
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
-                                <DialogFooter>
-                                    <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
+                            </div>
+                        )}
                     </div>
                 </main>
             </div>

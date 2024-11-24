@@ -26,19 +26,19 @@ export default function AdminTeacherList() {
 
     const fetchTeachers = async () => {
         try {
-            const userData = sessionStorage.getItem('userData')
+            const userData = sessionStorage.getItem('userData');
 
             if (!userData) {
-                setErrorMessage("No userData found in session storage")
-                return
+                setErrorMessage("No userData found in session storage");
+                return;
             }
 
-            const parsedData = JSON.parse(userData)
-            const token = parsedData.accessToken
+            const parsedData = JSON.parse(userData);
+            const token = parsedData.accessToken;
 
             if (!token) {
-                setErrorMessage("No token found in userData")
-                return
+                setErrorMessage("No token found in userData");
+                return;
             }
 
             const response = await fetch("http://localhost:8081/api/teachers/getinfoofall", {
@@ -46,20 +46,21 @@ export default function AdminTeacherList() {
                 headers: {
                     "Authorization": `Bearer ${token}`,
                 },
-            })
+            });
 
             if (response.ok) {
-                const data = await response.json()
-                setTeachers(data)
+                const data = await response.json();
+                const teacherList = data.map((item) => item.teacherInfo); // Extract teacherInfo from the response
+                setTeachers(teacherList);
             } else {
-                const errorData = await response.json()
-                setErrorMessage(errorData.message || "Failed to fetch teachers")
+                const errorData = await response.json();
+                setErrorMessage(errorData.message || "Failed to fetch teachers");
             }
         } catch (error) {
-            setErrorMessage("An error occurred while fetching teachers.")
-            console.error("Error:", error)
+            setErrorMessage("An error occurred while fetching teachers.");
+            console.error("Error:", error);
         }
-    }
+    };
 
     const handleUpdateTeacher = async () => {
         try {

@@ -4,7 +4,9 @@ import { Sidebar, SidebarBody, SidebarLink } from "../sidebarProvider";
 import {
     IconArrowLeft,
     IconBooks,
-    IconCheck,
+    IconBook,
+    IconBookmark,
+    IconArrowBackUp,
     IconPlus,
     IconTrash,
     IconBrandTabler,
@@ -12,7 +14,6 @@ import {
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/utils/cn";
-import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import {removeData} from "@/utils/auth";
 
@@ -27,12 +28,20 @@ export default function LibrarianSidebar() {
         router.push('/librarianPage/viewBooks');
     };
 
-    const handleApproveBooks = () => {
-        router.push('/librarianPage/approveBooks');
-    };
-
     const handleAddBooks = () => {
         router.push('/librarianPage/addBooks');
+    };
+
+    const handleBorrowBooks = () => {
+        router.push('/librarianPage/borrowBook');
+    };
+
+    const handleReserveBooks = () => {
+        router.push('/librarianPage/reserveBook');
+    };
+
+    const handleReturnBooks = () => {
+        router.push('/librarianPage/returnBook');
     };
 
     const handleDeleteBooks = () => {
@@ -58,16 +67,28 @@ export default function LibrarianSidebar() {
             onClick: handleViewBooks,
         },
         {
-            label: "Approve Books",
-            href: "#",
-            icon: <IconCheck className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
-            onClick: handleApproveBooks,
-        },
-        {
             label: "Add Books",
             href: "#",
             icon: <IconPlus className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
             onClick: handleAddBooks,
+        },
+        {
+            label: "Borrow Books",
+            href: "#",
+            icon: <IconBook className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+            onClick: handleBorrowBooks,
+        },
+        {
+            label: "Reserve Books",
+            href: "#",
+            icon: <IconBookmark className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+            onClick: handleReserveBooks,
+        },
+        {
+            label: "Return Books",
+            href: "#",
+            icon: <IconArrowBackUp className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />,
+            onClick: handleReturnBooks,
         },
         {
             label: "Delete Books",

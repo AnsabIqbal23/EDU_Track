@@ -76,37 +76,57 @@ export default function AdminTeacherList() {
                                         <th className="py-4 px-6 text-sm font-semibold text-gray-300">Office Hours</th>
                                         <th className="py-4 px-6 text-sm font-semibold text-gray-300">Qualification</th>
                                         <th className="py-4 px-6 text-sm font-semibold text-gray-300">Specialization</th>
+                                        <th className="py-4 px-6 text-sm font-semibold text-gray-300">Sections</th>
                                         <th className="py-4 px-6 text-sm font-semibold text-gray-300">Courses</th>
                                     </tr>
                                     </thead>
                                     <tbody className="text-gray-300">
                                     {teachers.length > 0 ? (
-                                        teachers.map((teacher) => (
+                                        teachers.map(({ teacherInfo, sections }) => (
                                             <tr
-                                                key={teacher.id}
+                                                key={teacherInfo.id}
                                                 className="border-b border-gray-700/50 hover:bg-gray-700/10 transition-colors"
                                             >
-                                                <td className="py-4 px-6 text-sm">{teacher.username}</td>
-                                                <td className="py-4 px-6 text-sm">{teacher.email}</td>
-                                                <td className="py-4 px-6 text-sm">{teacher.department}</td>
-                                                <td className="py-4 px-6 text-sm">{teacher.officeHours}</td>
-                                                <td className="py-4 px-6 text-sm">{teacher.qualification}</td>
-                                                <td className="py-4 px-6 text-sm">{teacher.specialization}</td>
+                                                <td className="py-4 px-2 text-sm">{teacherInfo.username}</td>
+                                                <td className="py-4 px-2 text-sm">{teacherInfo.email}</td>
+                                                <td className="py-4 px-2 text-sm">{teacherInfo.department}</td>
+                                                <td className="py-4 px-2 text-sm">{teacherInfo.officeHours}</td>
+                                                <td className="py-4 px-2 text-sm">{teacherInfo.qualification}</td>
+                                                <td className="py-4 px-2 text-sm">
+                                                    {teacherInfo.specialization || "N/A"}
+                                                </td>
                                                 <td className="py-4 px-6 text-sm">
-                                                    <ul className="space-y-1">
-                                                        {teacher.courses.map((course) => (
-                                                            <li key={course.id}>
-                                                                {course.courseName} ({course.courseCode})
-                                                            </li>
-                                                        ))}
-                                                    </ul>
+                                                    {sections.length > 0 ? (
+                                                        <ul className="space-y-1">
+                                                            {sections.map((section) => (
+                                                                <li key={section.sectionId}>
+                                                                    {section.sectionName} ({section.sectionId})
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        "No sections assigned"
+                                                    )}
+                                                </td>
+                                                <td className="py-4 px-6 text-sm">
+                                                    {sections.length > 0 ? (
+                                                        <ul className="space-y-1">
+                                                            {sections.map((section) => (
+                                                                <li key={section.sectionId}>
+                                                                    {section.courseName} ({section.courseId})
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        "No courses assigned"
+                                                    )}
                                                 </td>
                                             </tr>
                                         ))
                                     ) : (
                                         <tr>
                                             <td
-                                                colSpan={7}
+                                                colSpan={8}
                                                 className="text-center py-8 text-gray-400"
                                             >
                                                 No teachers found.
