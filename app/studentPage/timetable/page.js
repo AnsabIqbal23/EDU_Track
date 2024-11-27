@@ -1,180 +1,216 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Upload, FileUp, RefreshCcw } from 'lucide-react'; // Add RefreshCcw icon for Update button
-import * as ExcelJS from 'exceljs';
+import { Tabs, TabsContent } from "@/components/ui/tabs";
+import {  Clock, User, MapPin } from "lucide-react";
 import StudentSidebar from "@/components/student/sidebar";
 
-// Function to process the Excel file
-const processExcelFile = async (file) => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const arrayBuffer = e.target.result;
-      const workbook = new ExcelJS.Workbook();
-      await workbook.xlsx.load(arrayBuffer);
+const validDays = ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"];
 
-      const worksheet = workbook.worksheets[0]; // Assuming first sheet is the timetable
-      const formattedData = {};
+const fetchTimetableData = async (studentId, day, token) => {
+  try {
+    const response = await fetch(
+        `http://localhost:8081/api/schedules/student?studentId=${studentId}&day=${day.toLowerCase()}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+    );
 
-      worksheet.eachRow((row, rowIndex) => {
-        if (rowIndex === 1) return; // Skip header row
+    if (!response.ok) {
+      throw new Error("Failed to fetch timetable. Please check your input.");
+    }
 
-        const day = row.getCell(1).value?.toUpperCase();  // Assuming 'Day' is in the first column
-        if (!day) return;
+    const data = await response.json();
+    const formattedData = {};
 
-        const classData = {
-          code: row.getCell(2).value, // Assuming 'Code' is in the second column
-          name: row.getCell(3).value, // 'Subject' in third
-          instructor: row.getCell(4).value, // 'Instructor' in fourth
-          startTime: row.getCell(5).value, // 'StartTime' in fifth
-          endTime: row.getCell(6).value, // 'EndTime' in sixth
-        };
-
-        if (!formattedData[day]) formattedData[day] = [];
-        formattedData[day].push(classData);
+    data.forEach((entry) => {
+      const dayUpper = entry.day.toUpperCase();
+      if (!formattedData[dayUpper]) {
+        formattedData[dayUpper] = [];
+      }
+      formattedData[dayUpper].push({
+        code: entry.courseCode,
+        id: entry.courseId,
+        name: entry.courseName,
+        s_name: entry.sectionName,
+        instructor: entry.teacherName,
+        startTime: entry.startTime,
+        endTime: entry.endTime,
+        classroom: entry.classroom,
       });
+    });
 
-      resolve(formattedData);
-    };
-    reader.onerror = reject;
-    reader.readAsArrayBuffer(file);
-  });
+    return formattedData;
+  } catch (error) {
+    console.error("Error fetching timetable data:", error);
+    throw error;
+  }
 };
 
-export default function Timetable() {
-  const [activeDay, setActiveDay] = useState('MONDAY');
-  const [timetableData, setTimetableData] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadedFileName, setUploadedFileName] = useState(null);
+const Toast = ({ message, variant, onClose }) => (
+    <div
+        className={`fixed bottom-4 right-4 bg-${
+            variant === "destructive" ? "red-600" : "green-600"
+        } text-white px-4 py-2 rounded-md shadow-md`}
+        onClick={onClose}
+    >
+      {message}
+    </div>
+);
 
-  // Load saved timetable from local storage if it exists
+export default function Timetable() {
+  const [activeDay, setActiveDay] = useState("MONDAY");
+  const [timetableData, setTimetableData] = useState(null);
+  const [isFetching, setIsFetching] = useState(false);
+  const [toast, setToast] = useState(null);
+  const [userData, setUserData] = useState(null);
+
   useEffect(() => {
-    const savedTimetable = localStorage.getItem('timetableData');
-    if (savedTimetable) {
-      setTimetableData(JSON.parse(savedTimetable));
-      setUploadedFileName('Previously uploaded file');
+    // Access sessionStorage only in the client-side
+    const storedData = sessionStorage.getItem("userData");
+    if (storedData) {
+      setUserData(JSON.parse(storedData));
+    } else {
+      setToast({ message: "You must be logged in to view your timetable.", variant: "destructive" });
     }
   }, []);
 
-  // Handle file upload
-  const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      setIsUploading(true);
+  const token = userData?.accessToken;
+  const studentId = userData?.id;
+
+  useEffect(() => {
+    if (!token || !studentId) return;
+
+    const fetchData = async () => {
+      setIsFetching(true);
       try {
-        const data = await processExcelFile(file);
+        const data = await fetchTimetableData(studentId, activeDay, token);
         setTimetableData(data);
-        setUploadedFileName(file.name);
-        localStorage.setItem('timetableData', JSON.stringify(data));
       } catch (error) {
-        console.error('Error processing file:', error);
-        alert('Error processing file. Please try again.');
+        setToast({ message: "Failed to fetch timetable. Please try again.", variant: "destructive" });
       } finally {
-        setIsUploading(false);
+        setIsFetching(false);
       }
-    }
+    };
+
+    const debounceFetch = setTimeout(() => {
+      fetchData();
+    }, 300);
+
+    return () => clearTimeout(debounceFetch);
+  }, [activeDay, token, studentId]);
+
+  const handleDayClick = (day) => {
+    setActiveDay(day);
   };
 
-  // If no timetable data has been uploaded
-  if (!timetableData) {
-    return (
-        <div className="h-screen w-full bg-[#121212] text-gray-200 grid grid-cols-[auto_1fr]">
-          <StudentSidebar />
-          <Card className="bg-gray-900 border-gray-800 p-6 mx-auto my-20">
-            <CardContent className="text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-semibold text-gray-100">Upload your timetable</h3>
-              <p className="mt-1 text-sm text-gray-400">Upload an Excel file (.xlsx) with your timetable information</p>
-              <div className="mt-6">
-                <Label htmlFor="file-upload" className="cursor-pointer bg-purple-600 hover:bg-purple-700 inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-md">
-                  <FileUp className="-ml-1 mr-2 h-5 w-5" />
-                  Upload file
-                </Label>
-                <Input
-                    id="file-upload"
-                    name="file-upload"
-                    type="file"
-                    className="sr-only"
-                    accept=".xlsx, .xls"
-                    onChange={handleFileUpload}
-                    disabled={isUploading}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-    );
-  }
-
   return (
-      <div className="h-screen w-full bg-[#121212] text-gray-200 grid grid-cols-[auto_1fr]">
-        <StudentSidebar />
-        <div className="p-6 bg-black">
-          <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white text-center text-2xl">Timetable</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="flex justify-between mb-4">
-                <h2 className="text-lg text-white">Uploaded File: {uploadedFileName}</h2>
-                <Label htmlFor="update-upload" className="cursor-pointer bg-purple-600 hover:bg-purple-700 inline-flex items-center px-4 py-2 text-sm font-medium text-white rounded-md">
-                  <RefreshCcw className="-ml-1 mr-2 h-5 w-5" />
-                  Update Timetable
-                </Label>
-                <Input
-                    id="update-upload"
-                    name="update-upload"
-                    type="file"
-                    className="sr-only"
-                    accept=".xlsx, .xls"
-                    onChange={handleFileUpload}
-                    disabled={isUploading}
-                />
-              </div>
-              <Tabs defaultValue={activeDay} onValueChange={setActiveDay} className="w-full">
-                <TabsList className="grid w-full grid-cols-3 bg-gray-800 mb-4">
-                  {Object.keys(timetableData).map((day) => (
-                      <TabsTrigger
-                          key={day}
-                          value={day}
-                          className="data-[state=active]:bg-purple-600 data-[state=active]:text-white text-gray-400 py-2"
-                      >
-                        {day}
-                      </TabsTrigger>
-                  ))}
-                </TabsList>
-                {Object.entries(timetableData).map(([day, schedule]) => (
-                    <TabsContent key={day} value={day} className="mt-0">
-                      <div className="mb-4">
-                        <h3 className="text-lg font-bold text-white bg-gray-700 p-2 rounded">
-                          {day}
-                        </h3>
-                        {schedule.map((class_, index) => (
-                            <div key={index} className="flex items-center mb-2 last:mb-0 bg-gray-800 rounded-lg overflow-hidden">
-                              <div className="flex-grow p-3">
-                                <div className="font-bold text-white">{class_.code}</div>
-                                <div className="text-gray-300">{class_.name}</div>
-                                <div className="text-sm text-gray-400">{class_.instructor}</div>
-                              </div>
-                              <div className="flex items-center bg-gray-900 p-3 text-white space-x-2">
-                                <div className="text-lg font-semibold">{class_.startTime}</div>
-                                <div className="text-sm text-gray-400">To</div>
-                                <div className="text-lg font-semibold">{class_.endTime}</div>
-                              </div>
-                            </div>
-                        ))}
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
+        <div className="grid grid-cols-[auto_1fr]">
+          <StudentSidebar />
+          <main className="overflow-auto p-6">
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+            >
+              <Card className="bg-gray-800 border-gray-700 shadow-lg">
+                <CardHeader>
+                  <CardTitle className="text-3xl font-bold text-white flex items-center justify-center gap-2">
+                    <Clock className="w-8 h-8 text-blue-500" />
+                    Your Timetable
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex justify-between items-center mb-6">
+                    <h2 className="text-xl text-white font-semibold">Active Day: {activeDay}</h2>
+                    <div className="flex items-center space-x-2">
+                      {validDays.slice(0, 5).map((day) => (
+                          <button
+                              key={day}
+                              className={`px-4 py-2 rounded-md text-white ${activeDay === day ? "bg-blue-600" : "bg-gray-700 hover:bg-gray-600"}`}
+                              onClick={() => handleDayClick(day)}
+                          >
+                            {day.slice(0, 3)}
+                          </button>
+                      ))}
+                    </div>
+                  </div>
+                  {isFetching ? (
+                      <div className="flex justify-center items-center h-64">
+                        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
                       </div>
-                    </TabsContent>
-                ))}
-              </Tabs>
-            </CardContent>
-          </Card>
+                  ) : timetableData ? (
+                      <Tabs defaultValue={activeDay} onValueChange={setActiveDay} className="w-full">
+                        {Object.entries(timetableData).map(([day, schedule]) => (
+                            <TabsContent key={day} value={day} className="mt-0">
+                              <div className="space-y-4">
+                                {schedule.length === 0 ? (
+                                    <p className="text-gray-400 text-center py-8">
+                                      No classes scheduled for this day.
+                                    </p>
+                                ) : (
+                                    schedule.map((class_, index) => (
+                                        <motion.div
+                                            key={index}
+                                            initial={{ opacity: 0, y: 20 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3, delay: index * 0.1 }}
+                                            className="bg-gray-700 rounded-lg overflow-hidden shadow-md"
+                                        >
+                                          <div className="p-4">
+                                            <div className="flex justify-between items-start mb-2">
+                                              <div>
+                                                <h3 className="font-bold text-white text-lg">
+                                                  {class_.code}
+                                                </h3>
+                                                <p className="text-blue-300">{class_.name} ( {class_.id} )</p>
+                                                <p className="text-blue-300">Section {class_.s_name}</p>
+                                              </div>
+                                              <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                                                {class_.startTime} - {class_.endTime}
+                                              </div>
+                                            </div>
+                                            <div className="flex items-center text-gray-300 text-sm mt-2">
+                                              <User className="w-4 h-4 mr-2" />
+                                              <span>{class_.instructor}</span>
+                                            </div>
+                                            <div className="flex items-center text-gray-300 text-sm mt-1">
+                                              <MapPin className="w-4 h-4 mr-2" />
+                                              <span>{class_.classroom}</span>
+                                            </div>
+                                          </div>
+                                        </motion.div>
+                                    ))
+                                )}
+                              </div>
+                            </TabsContent>
+                        ))}
+                      </Tabs>
+                  ) : (
+                      <Card className="bg-gray-700 border-gray-600 p-6 text-center">
+                        <CardContent>
+                          <h3 className="mt-2 text-lg font-semibold text-white">
+                            No timetable available
+                          </h3>
+                          <p className="mt-1 text-gray-300">
+                            Please select a day to fetch your timetable.
+                          </p>
+                        </CardContent>
+                      </Card>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
+          </main>
         </div>
+        {toast && <Toast {...toast} onClose={() => setToast(null)} />}
       </div>
   );
 }

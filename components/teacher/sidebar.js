@@ -7,7 +7,7 @@ import {
   IconReportAnalytics,
   IconBrandTabler,
   IconClock,
-  IconClipboardList,
+  IconClipboardList, IconCalendarDue,
 } from "@tabler/icons-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -37,6 +37,10 @@ export default function TeacherSidebar() {
 
   const handleTimetable = () => {
     router.push("/teacherPage/timetable");
+  };
+
+  const handleExamSchedule = () => {
+    router.push("/teacherPage/examSchedule");
   };
 
   const handleAssignment = () => {
@@ -80,6 +84,14 @@ export default function TeacherSidebar() {
           <IconClock className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
       onClick: handleTimetable,
+    },
+    {
+      label: "Exam Schedule",
+      href: "#",
+      icon: (
+          <IconCalendarDue className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+      onClick: handleExamSchedule,
     },
     {
       label: "Assignment",

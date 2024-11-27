@@ -4,7 +4,7 @@ import { Book, UserCheck, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import TeacherSidebar from "@/components/teacher/sidebar"; // Assuming you have a sidebar specific to teachers
+import TeacherSidebar from "@/components/teacher/sidebar";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
 
@@ -146,46 +146,6 @@ const TeacherDashboard = () => {
                             </div>
                         </CardContent>
                     </Card>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {[
-                            {
-                                title: "Total Classes",
-                                value: "35",
-                                icon: Book,
-                                color: "bg-blue-600",
-                                increase: "+3% from last month"
-                            },
-                            {
-                                title: "Classes Today",
-                                value: "5",
-                                icon: UserCheck,
-                                color: "bg-green-600",
-                                increase: "+10% from yesterday"
-                            },
-                            {
-                                title: "Late Submissions",
-                                value: "8",
-                                icon: AlertCircle,
-                                color: "bg-red-600",
-                                increase: "2 late this week"
-                            }
-                        ].map((item, index) => (
-                            <Card key={index} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
-                                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                                    <CardTitle className="text-white font-medium">{item.title}</CardTitle>
-                                    <item.icon className={`h-5 w-5 ${item.color} rounded p-1 text-white`} />
-                                </CardHeader>
-                                <CardContent>
-                                    <div className="space-y-2">
-                                        <p className="text-2xl font-bold text-white">{item.value}</p>
-                                        <p className="text-sm text-gray-400">{item.increase}</p>
-                                        <Progress value={75} className={`h-1 ${item.color}`} />
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
                 </main>
             </div>
         </div>

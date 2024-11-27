@@ -119,15 +119,6 @@ const Assignment = () => {
                             {assignment.feedback && <p>Feedback: {assignment.feedback}</p>}
                             {assignment.marks > 0 && <p>Marks: {assignment.marks}</p>}
                           </div>
-
-                          {assignment.attachment && (
-                              <div className="flex items-center space-x-4 bg-gray-700 p-4 rounded-lg mt-4">
-                                <FileIcon className="h-8 w-8 text-blue-400" />
-                                <a href={`http://localhost:8081/${assignment.attachment}`} download className="text-lg font-semibold underline text-blue-500">
-                                  Download Attachment
-                                </a>
-                              </div>
-                          )}
                         </CardContent>
 
                         {!assignment.submitted && (

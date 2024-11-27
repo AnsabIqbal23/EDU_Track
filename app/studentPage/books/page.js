@@ -4,22 +4,22 @@ import React, { useState, useEffect } from 'react'
 import StudentSidebar from '@/components/student/sidebar'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import { Card, CardHeader } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 
-// Helper function to get the access token from session storage
+// Helper to get token from session storage
 const getToken = () => {
   const userData = JSON.parse(sessionStorage.getItem('userData'))
   return userData?.accessToken || ''
 }
 
-// Function to fetch books from the search API
+// Fetch books from API
 async function fetchBooks(query) {
   const token = getToken()
   const response = await fetch(`http://localhost:8081/api/library/search?query=${query}`, {
     headers: {
-      'Authorization': `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   })
   if (!response.ok) {
@@ -35,7 +35,6 @@ export default function ViewBooksPage() {
   const [loading, setLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState(null)
 
-  // Fetch books with updated status
   const fetchBooksWithStatus = async (query) => {
     setLoading(true)
     setErrorMessage(null)
@@ -43,13 +42,14 @@ export default function ViewBooksPage() {
       const data = await fetchBooks(query)
       const updatedBooks = data.map((book) => ({
         ...book,
-        status: book.availabilityStatus === 'AVAILABLE'
-            ? 'Available'
-            : book.availabilityStatus === 'CHECKED_OUT'
-                ? 'Checked Out'
-                : book.availabilityStatus === 'RESERVED'
-                    ? 'Reserved'
-                    : 'Lost',
+        status:
+            book.availabilityStatus === 'AVAILABLE'
+                ? 'Available'
+                : book.availabilityStatus === 'CHECKED_OUT'
+                    ? 'Checked Out'
+                    : book.availabilityStatus === 'RESERVED'
+                        ? 'Reserved'
+                        : 'Lost',
       }))
       setBooks(updatedBooks)
     } catch (error) {
@@ -63,7 +63,6 @@ export default function ViewBooksPage() {
     fetchBooksWithStatus('')
   }, [])
 
-  // Filter books based on search term and status
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
         book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -78,17 +77,20 @@ export default function ViewBooksPage() {
           <StudentSidebar />
           <main className="p-8">
             <div className="max-w-[1400px] mx-auto">
+              {/* Page Header */}
               <header className="mb-8">
                 <h1 className="text-3xl font-bold text-white mb-2">Books</h1>
                 <p className="text-gray-400">Search and manage books below.</p>
               </header>
 
+              {/* Error Message */}
               {errorMessage && (
                   <div className="bg-red-600/10 border border-red-600/20 text-red-500 p-3 rounded-md mb-4">
                     {errorMessage}
                   </div>
               )}
 
+              {/* Search and Filter Card */}
               <Card className="bg-[#1c2237] rounded-lg p-6 mb-6">
                 <CardHeader className="p-0">
                   <div className="flex items-center gap-4 mb-6">
@@ -126,6 +128,7 @@ export default function ViewBooksPage() {
                 </CardHeader>
               </Card>
 
+              {/* Books Table */}
               <div className="overflow-x-auto bg-[#1c2237] rounded-lg p-6">
                 <table className="w-full border-collapse text-left">
                   <thead>
