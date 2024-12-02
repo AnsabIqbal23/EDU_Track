@@ -1,163 +1,169 @@
 'use client';
 
-import { Bell, Calendar, User, GraduationCap, Users } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Mail, Phone, User, Briefcase, Home } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
+import { Card } from "@/components/ui/card";
 import ParentSidebar from "@/components/parent/sidebar";
 
-const ParentDashboard = () => {
-    const parent = {
-        name: "Jane Doe",
-        phone: "(123) 456-7890",
-        ssn: "XXX-XX-1234",
-        email: "jane.doe@example.com",
-        address: "1234 Elm St, Any-town, USA",
-        children: [
-            {
-                id: 1,
-                name: "John Doe",
-                academicPerformance: { gpa: 3.8, credits: { completed: 90, total: 120 } },
-                attendance: { overall: 94, attended: 47, totalClasses: 50, lastAbsence: "Sep 28, 2023" },
-                upcoming: [
-                    { title: "Math Midterm", date: "Oct 15, 2023 - 10:00 AM" },
-                    { title: "History Project", date: "Oct 20, 2023 - 11:59 PM" },
-                ],
-                recentGrades: [
-                    { subject: "Math", assignment: "Quiz 3", grade: "A-" },
-                    { subject: "English", assignment: "Essay 2", grade: "B+" },
-                ],
-            },
-            {
-                id: 3,
-                name: "Jackson Doe",
-                academicPerformance: { gpa: 3.8, credits: { completed: 90, total: 120 } },
-                attendance: { overall: 94, attended: 47, totalClasses: 50, lastAbsence: "Sep 28, 2023" },
-                upcoming: [
-                    { title: "Math Midterm", date: "Oct 15, 2023 - 10:00 AM" },
-                    { title: "History Project", date: "Oct 20, 2023 - 11:59 PM" },
-                ],
-                recentGrades: [
-                    { subject: "Math", assignment: "Quiz 3", grade: "A-" },
-                    { subject: "English", assignment: "Essay 2", grade: "B+" },
-                ],
-            },
-            {
-                id: 2,
-                name: "Emily Doe",
-                academicPerformance: { gpa: 3.9, credits: { completed: 70, total: 100 } },
-                attendance: { overall: 96, attended: 48, totalClasses: 50, lastAbsence: "Oct 1, 2023" },
-                upcoming: [
-                    { title: "Science Fair", date: "Oct 25, 2023 - 8:00 AM" },
-                    { title: "Art Submission", date: "Oct 22, 2023 - 5:00 PM" },
-                ],
-                recentGrades: [
-                    { subject: "Science", assignment: "Lab Report", grade: "A" },
-                    { subject: "Art", assignment: "Portfolio", grade: "A+" },
-                ],
-            },
-        ],
+function ParentDashboard() {
+    const [parent, setParent] = useState(null); // State for parent info
+    const [loading, setLoading] = useState(true); // State for loading
+    const [error, setError] = useState(null); // State for error
+    const [visibleProfile, setVisibleProfile] = useState(null); // State to track the expanded child profile
+    const router = useRouter();
+
+    // Fetch Parent Info
+    useEffect(() => {
+        const fetchParentInfo = async () => {
+            try {
+                const token = JSON.parse(sessionStorage.getItem("userData"))?.accessToken; // Retrieve token
+                if (!token) {
+                    setError("Authentication token not found.");
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch("http://localhost:8081/api/auth/getparentinfo", {
+                    method: "GET",
+                    headers: {
+                        Authorization: `Bearer ${token}`, // Pass token in the header
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error("Failed to fetch parent information.");
+                }
+
+                const data = await response.json();
+                setParent({
+                    name: data.username,
+                    email: data.email,
+                    phone: data.contactNumber,
+                    address: data.address,
+                    occupation: data.occupation,
+                    children: data.children.map((child) => ({
+                        id: child.id,
+                        name: child.username,
+                        email: child.email,
+                        studentId: child.studentId,
+                    })),
+                });
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchParentInfo();
+    }, []);
+
+    const toggleProfileVisibility = (id) => {
+        setVisibleProfile((prev) => (prev === id ? null : id));
     };
 
+    if (loading) {
+        return <div className="text-center text-gray-400">Loading...</div>;
+    }
+
+    if (error) {
+        return <div className="text-center text-red-500">{error}</div>;
+    }
+
     return (
-        <div className="h-screen w-full bg-black text-white grid grid-cols-[auto_1fr]">
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 grid grid-cols-[auto_1fr]">
             <ParentSidebar />
-            <main className="container mx-auto p-6 h-full overflow-y-auto">
-                <header className="flex justify-between items-center mb-6">
-                    <h1 className="text-2xl font-bold">Welcome, {parent.name}</h1>
-                    <div className="flex items-center space-x-4">
-                        <Button variant="ghost" size="icon" className="text-gray-300 hover:text-white">
-                            <Bell className="h-5 w-5" />
-                            <span className="sr-only">Notifications</span>
-                        </Button>
-                        <Button variant="ghost" className="bg-blue-700 text-white px-3 py-1 rounded-md">
-                            {parent.children.length} Children
-                        </Button>
+            <main className="p-6">
+                <h1 className="text-4xl font-bold mb-2">Welcome back, {parent.name}!</h1>
+                <p className="text-gray-400 mb-8">Track your children's academic progress and activities</p>
+
+                {/* Parent Profile Card */}
+                <Card className="bg-[#1f2937] border-0 p-6 mb-6">
+                    <div className="flex items-center gap-4 mb-4">
+                        <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl">
+                            {parent.name.charAt(0)}
+                        </div>
+                        <div>
+                            <h2 className="text-2xl font-semibold">{parent.name}</h2>
+                            <p className="text-blue-400">Parent</p>
+                        </div>
                     </div>
-                </header>
-
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Parent Info Card */}
-                    <Card className="bg-[#1C2C4A] border-blue-500 col-span-1 md:col-span-2 lg:col-span-1">
-                        <CardHeader>
-                            <CardTitle className="text-white">Parent Information</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="space-y-4">
-                                <p className="text-sm font-medium text-gray-200">Name: {parent.name}</p>
-                                <p className="text-sm font-medium text-gray-200">Phone: {parent.phone}</p>
-                                <p className="text-sm font-medium text-gray-200">SSN: {parent.ssn}</p>
-                                <p className="text-sm font-medium text-gray-200">Email: {parent.email}</p>
-                                <p className="text-sm font-medium text-gray-200">Address: {parent.address}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="flex items-center gap-2">
+                            <Mail className="text-gray-400" />
+                            <div>
+                                <p className="text-sm text-gray-400">Email</p>
+                                <p>{parent.email}</p>
                             </div>
-                        </CardContent>
-                    </Card>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Phone className="text-gray-400" />
+                            <div>
+                                <p className="text-sm text-gray-400">Phone</p>
+                                <p>{parent.phone}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Briefcase className="text-gray-400" />
+                            <div>
+                                <p className="text-sm text-gray-400">Occupation</p>
+                                <p>{parent.occupation}</p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Home className="text-gray-400" />
+                            <div>
+                                <p className="text-sm text-gray-400">Address</p>
+                                <p>{parent.address}</p>
+                            </div>
+                        </div>
+                    </div>
+                </Card>
 
-                    {/* Child Info Cards */}
-                    {parent.children.map((child) => (
-                        <Card key={child.id} className="bg-[#1C2C4A] border-blue-500">
-                            <CardHeader>
-                                <CardTitle className="text-white">{child.name} Dashboard</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {/* Academic Performance */}
+                {/* Children Section */}
+                <h2 className="text-3xl font-bold mb-4">Children Record</h2>
+                {parent.children.map((child) => (
+                    <Card key={child.id} className="bg-[#1f2937] border-0 p-6 mb-6">
+                        <div className="flex items-center gap-4 mb-4">
+                            <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-2xl">
+                                {child.name.charAt(0)}
+                            </div>
+                            <div>
+                                <h2 className="text-2xl font-semibold">{child.name}</h2>
+                                <p className="text-blue-400">Student</p>
+                            </div>
+                            <Button
+                                className="ml-auto bg-blue-600 hover:bg-blue-700"
+                                onClick={() => toggleProfileVisibility(child.id)}
+                            >
+                                {visibleProfile === child.id ? "Hide Full Profile" : "View Full Profile"}
+                            </Button>
+                        </div>
+                        {visibleProfile === child.id && (
+                            <div className="mt-4 text-gray-200">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                     <div>
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium text-gray-200">GPA</p>
-                                            <p className="text-sm text-gray-300">{child.academicPerformance.gpa} / 4.0</p>
-                                        </div>
-                                        <Progress value={(child.academicPerformance.gpa / 4) * 100} className="mt-2 bg-blue-600" />
+                                        <p className="text-sm text-gray-400">Email</p>
+                                        <p>{child.email}</p>
                                     </div>
                                     <div>
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium text-gray-200">Credits Completed</p>
-                                            <p className="text-sm text-gray-300">{child.academicPerformance.credits.completed} / {child.academicPerformance.credits.total}</p>
-                                        </div>
-                                        <Progress value={(child.academicPerformance.credits.completed / child.academicPerformance.credits.total) * 100} className="mt-2 bg-blue-600" />
+                                        <p className="text-sm text-gray-400">Student ID</p>
+                                        <p>{child.studentId}</p>
                                     </div>
-
-                                    {/* Upcoming Events */}
                                     <div>
-                                        <p className="text-sm font-medium text-gray-200">Upcoming</p>
-                                        {child.upcoming.map((event, index) => (
-                                            <div key={index} className="flex items-center mt-1">
-                                                <Calendar className="mr-2 h-4 w-4 text-blue-300" />
-                                                <p className="text-sm text-gray-300">{event.title} - {event.date}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Recent Grades */}
-                                    <div>
-                                        <p className="text-sm font-medium text-gray-200">Recent Grades</p>
-                                        {child.recentGrades.map((grade, index) => (
-                                            <div key={index} className="flex items-center justify-between mt-1">
-                                                <p className="text-sm text-gray-200">{grade.subject} - {grade.assignment}</p>
-                                                <Badge variant="secondary" className="bg-blue-500 text-white">{grade.grade}</Badge>
-                                            </div>
-                                        ))}
-                                    </div>
-
-                                    {/* Attendance */}
-                                    <div>
-                                        <div className="flex items-center justify-between">
-                                            <p className="text-sm font-medium text-gray-200">Attendance</p>
-                                            <p className="text-sm text-gray-300">{child.attendance.overall}%</p>
-                                        </div>
-                                        <Progress value={child.attendance.overall} className="mt-2 bg-blue-600" />
-                                        <p className="text-xs text-gray-300">Classes attended: {child.attendance.attended}/{child.attendance.totalClasses}</p>
-                                        <p className="text-xs text-gray-300">Last absence: {child.attendance.lastAbsence}</p>
+                                        <p className="text-sm text-gray-400">Search ID</p>
+                                        <p>{child.id}</p>
                                     </div>
                                 </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+                            </div>
+                        )}
+                    </Card>
+                ))}
             </main>
         </div>
     );
-};
+}
 
 export default ParentDashboard;

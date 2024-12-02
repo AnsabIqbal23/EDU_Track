@@ -38,30 +38,10 @@ export default function ParentSidebar() {
     router.push("/parentPage/marks");
   };
 
-  const handleTimetable = () => {
-    router.push("/parentPage/timetable");
+  const handleFeedback = () => {
+    router.push("/parentPage/feedback");
   };
-
-  const handleExam = () => {
-    router.push("/parentPage/exam");
-  };
-
-  const handleAssignment = () => {
-    router.push("/parentPage/assignments");
-  };
-
-  const handleCourses = () => {
-    router.push("/parentPage/courses");
-  };
-
-  const handleTranscript = () => {
-    router.push("/parentPage/transcript");
-  };
-
-  const handleFees = () => {
-    router.push("/parentPage/fees");
-  };
-
+  
   const handleLogout = () => {
     removeToken();  // Remove token from cookies/localStorage
     router.push('/auth/login');  // Redirect to login page
@@ -85,7 +65,7 @@ export default function ParentSidebar() {
       onClick: handleAttendance,
     },
     {
-      label: "Marks",
+      label: "Academic Progress",
       href: "#",
       icon: (
         <IconReportAnalytics className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
@@ -93,52 +73,12 @@ export default function ParentSidebar() {
       onClick: handleMarks,
     },
     {
-      label: "Time Table",
+      label: "Assignment Feedback",
       href: "#",
       icon: (
         <IconClock className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
-      onClick: handleTimetable,
-    },
-    {
-      label: "Exam Schedule",
-      href: "#",
-      icon: (
-        <IconCalendar className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleExam,
-    },
-    {
-      label: "Assignment",
-      href: "#",
-      icon: (
-          <IconClipboardList className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleAssignment,
-    },
-    {
-      label: "Courses",
-      href: "#",
-      icon: (
-        <IconBook className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleCourses,
-    },
-    {
-      label: "transcript",
-      href: "#",
-      icon: (
-        <IconCertificate className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleTranscript,
-    },
-    {
-      label: "Fees",
-      href: "#",
-      icon: (
-        <IconCoin className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleFees,
+      onClick: handleFeedback,
     },
     {
       label: "Logout",

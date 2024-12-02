@@ -1,150 +1,142 @@
-'use client'
+'use client';
 
-import { useState } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import ParentSidebar from "@/components/parent/sidebar";
 
-// Mock data - replace with actual data fetching logic
-const childrenData = {
-    'John Doe': {
-        courses: [
-            {
-                id: "COMP101",
-                name: "Introduction to Programming",
-                marks: {
-                    quiz: 85,
-                    midterm: 78,
-                    assignment: 92,
-                    final: 88
-                }
-            },
-            {
-                id: "MATH201",
-                name: "Linear Algebra",
-                marks: {
-                    quiz: 92,
-                    midterm: 85,
-                    assignment: 88,
-                    final: 90
-                }
-            }
-        ]
-    },
-    'Emily Doe': {
-        courses: [
-            {
-                id: "PHYS301",
-                name: "Quantum Mechanics",
-                marks: {
-                    quiz: 75,
-                    midterm: 82,
-                    assignment: 79,
-                    final: 85
-                }
-            },
-            {
-                id: "BIO101",
-                name: "Biology",
-                marks: {
-                    quiz: 88,
-                    midterm: 80,
-                    assignment: 85,
-                    final: 90
-                }
-            }
-        ]
-    }
-};
+const ChildGrades = () => {
+    const [childId, setChildId] = useState('');
+    const [grades, setGrades] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState(null);
 
-const ParentMarks = () => {
-    const [selectedChild, setSelectedChild] = useState('John Doe');
-    const [selectedCourse, setSelectedCourse] = useState(childrenData[selectedChild].courses[0].id);
+    const fetchGrades = async (id) => {
+        setLoading(true);
+        setError(null);
+        setGrades([]);
+
+        try {
+            const userData = sessionStorage.getItem('userData');
+            if (userData) {
+                const parsedData = JSON.parse(userData);
+                const token = parsedData.accessToken;
+
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                const response = await fetch(`http://localhost:8081/api/parent/child/${id}/progress`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch grades');
+                }
+
+                const data = await response.json();
+                setGrades(data);
+            } else {
+                throw new Error('No userData found in sessionStorage.');
+            }
+        } catch (err) {
+            setError(err.message || 'An error occurred');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const getGradeColor = (grade) => {
+        switch (grade) {
+            case 'A':
+            case 'B':
+                return 'bg-green-500';
+            case 'C':
+            case 'D':
+            case 'E':
+                return 'bg-yellow-500';
+            case 'F':
+                return 'bg-red-500';
+            default:
+                return 'bg-gray-500';
+        }
+    };
 
     return (
-        <div className="min-h-screen bg-[#121212] text-white grid grid-cols-[auto_1fr]">
-            {/* Sidebar */}
-            <div className="bg-[#1C2C4A] h-screen sticky top-0">
-                <ParentSidebar />
-            </div>
-
-            {/* Main Content */}
-            <div className="flex flex-col w-full overflow-y-auto">
-                <nav className="bg-[#1C2C4A] text-white p-4 flex justify-between items-center">
-                    <h2 className="text-lg">Marks - {selectedChild}</h2>
-                </nav>
-
-                <main className="p-6 space-y-6">
-                    {/* Child Select */}
-                    <Card className="bg-[#1C2C4A] border-blue-500">
-                        <CardHeader>
-                            <CardTitle className="text-white">Select Child</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Select onValueChange={(child) => {
-                                setSelectedChild(child);
-                                setSelectedCourse(childrenData[child].courses[0].id);  // Reset course to the first one
-                            }} defaultValue={selectedChild}>
-                                <SelectTrigger className="w-full text-white bg-[#1E2A3A] border-blue-500">
-                                    <SelectValue placeholder={selectedChild} />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[#1E2A3A]">
-                                    {Object.keys(childrenData).map((child) => (
-                                        <SelectItem key={child} value={child}>{child}</SelectItem>
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 grid grid-cols-[auto_1fr]">
+            <ParentSidebar/>
+            <main className="p-6">
+                <h1 className="text-4xl font-bold mb-2">Academic Progress</h1>
+                <p className="text-gray-400 mb-8">Enter your child id to view academic progress</p>
+                <Card className="bg-[#1f2937] border-0 text-white">
+                    <CardHeader>
+                        <CardTitle className="text-2xl font-semibold">Grade Report</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="mb-4">
+                            <label htmlFor="childId" className="block text-gray-300 font-medium mb-2">
+                                Enter Child ID:
+                            </label>
+                            <input
+                                id="childId"
+                                type="text"
+                                value={childId}
+                                onChange={(e) => setChildId(e.target.value)}
+                                className="w-full p-2 rounded bg-gray-800 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 border border-gray-600"
+                                placeholder="Enter Child ID"
+                            />
+                            <button
+                                onClick={() => fetchGrades(childId)}
+                                disabled={!childId || loading}
+                                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-gray-500"
+                            >
+                                {loading ? 'Loading...' : 'Get Grades'}
+                            </button>
+                        </div>
+                        {error && (
+                            <p className="text-red-500 mb-4">Error: {error}</p>
+                        )}
+                        {loading ? (
+                            <div className="space-y-2">
+                                <Skeleton className="h-4 w-full bg-gray-700"/>
+                                <Skeleton className="h-4 w-full bg-gray-700"/>
+                                <Skeleton className="h-4 w-full bg-gray-700"/>
+                            </div>
+                        ) : (
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead className="text-gray-300">Exam Type</TableHead>
+                                        <TableHead className="text-gray-300">Grade</TableHead>
+                                        <TableHead className="text-gray-300">Marks</TableHead>
+                                        <TableHead className="text-gray-300">Feedback</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {grades.map((grade) => (
+                                        <TableRow key={grade.id}>
+                                            <TableCell className="font-medium">{grade.examType}</TableCell>
+                                            <TableCell>
+                                                <Badge className={`${getGradeColor(grade.value)} text-white`}>
+                                                    {grade.value}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell>{grade.marks}</TableCell>
+                                            <TableCell>{grade.feedback || 'No feedback provided'}</TableCell>
+                                        </TableRow>
                                     ))}
-                                </SelectContent>
-                            </Select>
-                        </CardContent>
-                    </Card>
-
-                    {/* Course Select */}
-                    <Card className="bg-[#1C2C4A] border-blue-500">
-                        <CardHeader>
-                            <CardTitle className="text-white">Select Course</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <Select onValueChange={setSelectedCourse} defaultValue={selectedCourse}>
-                                <SelectTrigger className="w-full text-white bg-[#1E2A3A] border-blue-500">
-                                    <SelectValue placeholder="Select a course" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-[#1E2A3A]">
-                                    {childrenData[selectedChild].courses.map((course) => (
-                                        <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </CardContent>
-                    </Card>
-
-                    {/* Marks Table */}
-                    {childrenData[selectedChild].courses.map((course) => (
-                        course.id === selectedCourse && (
-                            <Card key={course.id} className="bg-[#1E2C4A] border-blue-500">
-                                <CardHeader>
-                                    <CardTitle className="text-xl font-bold text-white">{course.name}</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    <Accordion type="single" collapsible className="w-full">
-                                        {Object.entries(course.marks).map(([type, mark]) => (
-                                            <AccordionItem key={type} value={type} className="border-blue-500">
-                                                <AccordionTrigger className="text-white hover:text-gray-300">
-                                                    {type.charAt(0).toUpperCase() + type.slice(1)} Marks
-                                                </AccordionTrigger>
-                                                <AccordionContent className="text-gray-300">
-                                                    Your {type} mark is: {mark}
-                                                </AccordionContent>
-                                            </AccordionItem>
-                                        ))}
-                                    </Accordion>
-                                </CardContent>
-                            </Card>
-                        )
-                    ))}
-                </main>
-            </div>
+                                </TableBody>
+                            </Table>
+                        )}
+                    </CardContent>
+                </Card>
+            </main>
         </div>
     );
-}
+};
 
-export default ParentMarks;
+export default ChildGrades;

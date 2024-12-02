@@ -37,12 +37,12 @@ const Assignment = () => {
             "Authorization": `Bearer ${token}`
           }
         });
-        if (!response.ok) throw new Error("Failed to fetch assignments");
+        if (!response.ok) throw new Error("Failed to fetch feedback");
 
         const data = await response.json();
         setAssignments(data);
       } catch (error) {
-        console.error("Error fetching assignments:", error);
+        console.error("Error fetching feedback:", error);
       }
     };
 
