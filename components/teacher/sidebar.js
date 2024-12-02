@@ -37,20 +37,17 @@ export default function TeacherSidebar() {
 
   const actions = {
     attendance: [
-      { label: "Marks Attendance", path: "/teacherPage/attendance/mark" },
+      { label: "Mark Attendance", path: "/teacherPage/attendance/mark" },
       { label: "Get Attendance", path: "/teacherPage/attendance/getAttendance" },
-      { label: "Bulk Upload", path: "/teacherPage/attendance/bulk" },
     ],
     assignment: [
-      { label: "Create Assignment", path: "/teacherPage/feedback/create" },
-      { label: "Get Assignment", path: "/teacherPage/feedback/getAssignment" },
-      { label: "Grade Assignment", path: "/teacherPage/feedback/grade" },
+      { label: "Create Assignment", path: "/teacherPage/assignments/create" },
+      { label: "Get Assignment", path: "/teacherPage/assignments/getAssignment" },
+      { label: "Grade Assignment", path: "/teacherPage/assignments/grade" },
     ],
     marks: [
-      { label: "Input Grade", path: "/teacherPage/marks/input" },
-      { label: "Update Grade", path: "/teacherPage/marks/update" },
+      { label: "Input & Update Grade", path: "/teacherPage/marks/input" },
       { label: "Get Grade", path: "/teacherPage/marks/getGrade" },
-      { label: "Bulk Upload", path: "/teacherPage/marks/bulk" },
     ],
   };
 

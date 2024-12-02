@@ -51,10 +51,6 @@ export default function StudentSidebar() {
     router.push("/studentPage/assignment");
   };
 
-  const handleCourses = () => {
-    router.push("/studentPage/courses");
-  };
-
   const handleTranscript = () => {
     router.push("/studentPage/transcript");
   };
@@ -120,14 +116,6 @@ export default function StudentSidebar() {
           <IconClipboardList className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
       onClick: handleAssignment,
-    },
-    {
-      label: "Courses",
-      href: "#",
-      icon: (
-          <IconBook className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
-      ),
-      onClick: handleCourses,
     },
     {
       label: "Transcript",

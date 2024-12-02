@@ -1,120 +1,170 @@
 'use client';
 
-import { useState } from "react";
-import TeacherSidebar from "@/components/teacher/sidebar";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import TeacherSidebar from '@/components/teacher/sidebar';
+import {
+    ToastProvider,
+    ToastViewport,
+    Toast,
+    ToastTitle,
+    ToastDescription,
+    ToastClose,
+} from '@/components/ui/toast';
 
-const initialStudents = [
-    { id: 1, name: "Alice Brown", attendanceStatus: "Not Marked", lateCount: 0 },
-    { id: 2, name: "Bob Smith", attendanceStatus: "Not Marked", lateCount: 0 },
-    { id: 3, name: "Charlie Johnson", attendanceStatus: "Not Marked", lateCount: 0 }
-];
+const AttendanceComponent = () => {
+    const [studentId, setStudentId] = useState('');
+    const [courseName, setCourseName] = useState('');
+    const [attendanceDate, setAttendanceDate] = useState('');
+    const [isPresent, setIsPresent] = useState(false);
 
-const TeacherAttendance = () => {
-    const [selectedClass, setSelectedClass] = useState("");
-    const [selectedSection, setSelectedSection] = useState("");
-    const [students, setStudents] = useState(initialStudents);
-    const [presentCount, setPresentCount] = useState(0);
-    const [absentCount, setAbsentCount] = useState(0);
-    const currentDate = new Date().toLocaleDateString();
+    const [sectionId, setSectionId] = useState('');
+    const [courseId, setCourseId] = useState('');
+    const [bulkAttendanceDate, setBulkAttendanceDate] = useState('');
+    const [students, setStudents] = useState([
+        { id: 24, name: 'Ali Yahya' },
+        { id: 1602, name: 'abc' },
+    ]);
+    const [attendanceStatus, setAttendanceStatus] = useState({});
+    const [toasts, setToasts] = useState([]);
 
-    const handleAttendance = (studentId, action) => {
-        setStudents(prevStudents => {
-            let newPresentCount = presentCount;
-            let newAbsentCount = absentCount;
+    const addToast = (title, description, variant = 'default') => {
+        const newToast = { id: Date.now(), title, description, variant };
+        setToasts((prev) => [...prev, newToast]);
+    };
 
-            const updatedStudents = prevStudents.map(student => {
-                if (student.id === studentId) {
-                    if (action === "Present" && student.attendanceStatus !== "Present") {
-                        student.attendanceStatus = "Present";
-                        newPresentCount += 1;
-                        if (student.attendanceStatus === "Absent") newAbsentCount -= 1;
-                    } else if (action === "Absent" && student.attendanceStatus !== "Absent") {
-                        student.attendanceStatus = "Absent";
-                        newAbsentCount += 1;
-                        if (student.attendanceStatus === "Present") newPresentCount -= 1;
-                    } else if (action === "Late") {
-                        student.lateCount += 1;
-                        if (student.lateCount === 3) {
-                            student.attendanceStatus = "Absent";
-                            student.lateCount = 0;
-                            newAbsentCount += 1;
-                        } else {
-                            student.attendanceStatus = "Late";
-                        }
-                    }
-                }
-                return student;
+    const handleIndividualAttendance = async (e) => {
+        e.preventDefault();
+        try {
+            const userData = sessionStorage.getItem('userData');
+            if (!userData) {
+                setErrorMessage("No userData found in session storage");
+                return;
+            }
+
+            const parsedData = JSON.parse(userData);
+            const token = parsedData.accessToken;
+
+            if (!token) {
+                setErrorMessage("No token found in userData");
+                return;
+            }
+            const response = await fetch(`http://localhost:8081/api/attendance/mark?studentId=${studentId}&courseName=${courseName}&attendanceDate=${attendanceDate}&isPresent=${isPresent}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    studentId,
+                    courseName,
+                    attendanceDate,
+                    isPresent: isPresent ? 1 : 0,
+                }),
             });
-
-            setPresentCount(newPresentCount);
-            setAbsentCount(newAbsentCount);
-            return updatedStudents;
-        });
+            const data = await response.json();
+            addToast('Success', data.message);
+        } catch (error) {
+            addToast('Error', 'Failed to mark attendance', 'destructive');
+        }
     };
 
     return (
         <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
             <div className="grid grid-cols-[auto_1fr]">
                 <TeacherSidebar />
-                <main className="p-8">
-                    <header className="flex justify-between items-center mb-8">
-                        <h1 className="text-3xl font-bold text-white">Attendance - {currentDate}</h1>
-                    </header>
+                <main className="overflow-auto">
+                    <Card className="bg-gray-800 border-gray-700 max-w-5xl mx-auto mt-10">
+                        <CardContent className="p-8">
+                            <h1 className="text-3xl font-bold text-white mb-6">Attendance System</h1>
 
-                    <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm mb-8 p-6">
-                        <div className="grid grid-cols-2 gap-4">
-                            <Select onValueChange={setSelectedClass}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Class" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-700 shadow-lg rounded-md">
-                                    <SelectItem value="Math 101">Math 101</SelectItem>
-                                    <SelectItem value="Science 202">Science 202</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <Select onValueChange={setSelectedSection}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Section" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-gray-700 shadow-lg rounded-md">
-                                    <SelectItem value="A">A</SelectItem>
-                                    <SelectItem value="B">B</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-
-                        <div className="flex justify-between mt-8 text-white">
-                            <p>Total Students: {students.length}</p>
-                            <p>Present: {presentCount} | Absent: {absentCount}</p>
-                        </div>
+                            {/* Individual Attendance */}
+                            <form onSubmit={handleIndividualAttendance} className="space-y-6 mb-10">
+                                <h2 className="text-xl font-semibold text-white mb-4">
+                                    Individual Attendance
+                                </h2>
+                                <div>
+                                    <Label htmlFor="studentId" className="text-white mb-2 block">
+                                        Student ID
+                                    </Label>
+                                    <Input
+                                        id="studentId"
+                                        value={studentId}
+                                        onChange={(e) => setStudentId(e.target.value)}
+                                        className="bg-gray-700 text-white border-gray-600"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="courseName" className="text-white mb-2 block">
+                                        Course Name
+                                    </Label>
+                                    <Input
+                                        id="courseName"
+                                        value={courseName}
+                                        onChange={(e) => setCourseName(e.target.value)}
+                                        className="bg-gray-700 text-white border-gray-600"
+                                        required
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="attendanceDate" className="text-white mb-2 block">
+                                        Attendance Date
+                                    </Label>
+                                    <Input
+                                        id="attendanceDate"
+                                        type="date"
+                                        value={attendanceDate}
+                                        onChange={(e) => setAttendanceDate(e.target.value)}
+                                        className="bg-gray-700 text-white border-gray-600"
+                                        required
+                                    />
+                                </div>
+                                <div className="flex items-center space-x-4">
+                                    <Checkbox
+                                        id="isPresent"
+                                        checked={isPresent}
+                                        onCheckedChange={(checked) => setIsPresent(checked)}
+                                    />
+                                    <Label htmlFor="isPresent" className="text-white">
+                                        Present
+                                    </Label>
+                                </div>
+                                <Button
+                                    type="submit"
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2"
+                                >
+                                    Mark Attendance
+                                </Button>
+                            </form>
+                        </CardContent>
                     </Card>
-
-                    <div className="space-y-4">
-                        {students.map(student => (
-                            <Card key={student.id} className="bg-gray-800/50 border-gray-700 backdrop-blur-sm p-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4">
-                                    <Avatar className="h-10 w-10 bg-blue-500">
-                                        <AvatarFallback>{student.name.split(" ").map(n => n[0]).join('')}</AvatarFallback>
-                                    </Avatar>
-                                    <p className="text-white font-medium">{student.name}</p>
-                                    <p className="text-gray-400 text-sm">({student.attendanceStatus})</p>
-                                </div>
-                                <div className="flex gap-2">
-                                    <Button onClick={() => handleAttendance(student.id, "Present")} className="bg-green-600 hover:bg-green-700">Present</Button>
-                                    <Button onClick={() => handleAttendance(student.id, "Absent")} className="bg-red-600 hover:bg-red-700">Absent</Button>
-                                    <Button onClick={() => handleAttendance(student.id, "Late")} className="bg-yellow-600 hover:bg-yellow-700">Late</Button>
-                                </div>
-                            </Card>
-                        ))}
-                    </div>
                 </main>
             </div>
+
+            {/* Toast Notifications */}
+            <ToastProvider>
+                <ToastViewport />
+                {toasts.map((toast) => (
+                    <Toast
+                        key={toast.id}
+                        variant={toast.variant}
+                        className="bg-green-700 text-white"
+                    >
+                        <div>
+                            <ToastTitle>{toast.title}</ToastTitle>
+                            <ToastDescription>{toast.description}</ToastDescription>
+                        </div>
+                        <ToastClose />
+                    </Toast>
+                ))}
+            </ToastProvider>
         </div>
     );
-}
+};
 
-export default TeacherAttendance;
+export default AttendanceComponent;

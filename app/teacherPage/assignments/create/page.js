@@ -1,144 +1,169 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
-import TeacherSidebar from '@/components/teacher/sidebar';
-import {
-    ToastProvider,
-    ToastViewport,
-    Toast,
-    ToastTitle,
-    ToastDescription,
-    ToastClose,
-} from "@/components/ui/toast";
+import { Button } from "@/components/ui/button";
+import TeacherSidebar from "@/components/teacher/sidebar";
 
-export default function TeacherGradingPage() {
-    const [isSubmitting, setIsSubmitting] = useState(false);
-    const [toast, setToast] = useState({ show: false, message: '', type: '' });
+export default function CreateAssignment() {
+    const [assignmentTitle, setAssignmentTitle] = useState('');
+    const [description, setDescription] = useState('');
+    const [attachment, setAttachment] = useState('');
+    const [dueDate, setDueDate] = useState('');
+    const [sectionName, setSectionName] = useState('');
+    const [courseCode, setCourseCode] = useState('');
+    const [message, setMessage] = useState('');
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [uploading, setUploading] = useState(false);
 
-    async function handleSubmit(event) {
-        event.preventDefault();
-        setIsSubmitting(true);
+    const handleCreateAssignment = async () => {
+        const token = JSON.parse(sessionStorage.getItem('userData')).accessToken;
 
-        const formData = new FormData(event.target);
-        const data = {
-            assignmentId: formData.get('assignmentId'),
-            marks: formData.get('marks'),
-            feedback: formData.get('feedback'),
-        };
+        if (!assignmentTitle || !description || !attachment || !dueDate || !sectionName || !courseCode) {
+            setMessage('Please fill in all fields');
+            setIsSuccess(false);
+            return;
+        }
 
-        const getToken = () => {
-            const userData = JSON.parse(sessionStorage.getItem('userData'));
-            return userData?.accessToken || '';
-        };
+        setUploading(true);
+        setMessage('');
 
         try {
-            const token = getToken();
-            const response = await fetch(
-                `http://localhost:8081/api/assignments/grade?assignmentId=${data.assignmentId}&marks=${data.marks}&feedback=${data.feedback}`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data),
-                }
-            );
+            const url = `http://localhost:8081/api/assignments/create?assignmentTitle=${assignmentTitle}&description=${description}&attachment=${attachment}&dueDate=${dueDate}&sectionName=${sectionName}&courseCode=${courseCode}`;
 
-            if (response.ok) {
-                setToast({ show: true, message: "Assignment graded and student notified.", type: 'success' });
-            } else {
-                setToast({ show: true, message: "Failed to grade assignment. Please try again.", type: 'error' });
-            }
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            if (!response.ok) throw new Error('Failed to create assignment');
+
+            const result = await response.json();
+            setMessage(result.message);
+            setIsSuccess(true); // Mark success
+            resetForm();
         } catch (error) {
-            setToast({ show: true, message: "An error occurred. Please try again.", type: 'error' });
+            console.error('Error creating assignment:', error);
+            setMessage('Failed to create assignment. Please check the details.');
+            setIsSuccess(false); // Mark failure
         } finally {
-            setIsSubmitting(false);
+            setUploading(false);
         }
-    }
+    };
+
+    const resetForm = () => {
+        setAssignmentTitle('');
+        setDescription('');
+        setAttachment('');
+        setDueDate('');
+        setSectionName('');
+        setCourseCode('');
+    };
 
     return (
-        <ToastProvider>
-            <div className="min-h-screen bg-[#1a1f2e]">
-                <div className="grid grid-cols-[auto_1fr]">
-                    <TeacherSidebar />
-                    <main className="p-8">
-                        <div className="max-w-6xl mx-auto space-y-8">
-                            <div className="space-y-2">
-                                <h1 className="text-4xl font-bold">Grade Student's Assignments</h1>
+        <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800">
+            <div className="grid grid-cols-[auto_1fr]">
+                <TeacherSidebar />
+                <main className="p-8">
+                    <div className="max-w-2xl mx-auto">
+                        <Card className="bg-gray-800/50 border-gray-700 backdrop-blur-sm">
+                            <CardHeader>
+                                <CardTitle className="text-2xl font-bold text-center text-gray-100">
+                                    Create Assignment
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-2">
+                                    <Label htmlFor="assignmentTitle" className="text-gray-200 flex items-center gap-2">
+                                        Assignment Title
+                                    </Label>
+                                    <Input
+                                        id="assignmentTitle"
+                                        value={assignmentTitle}
+                                        onChange={(e) => setAssignmentTitle(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="description" className="text-gray-200 flex items-center gap-2">
+                                        Description
+                                    </Label>
+                                    <Input
+                                        id="description"
+                                        value={description}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="attachment" className="text-gray-200 flex items-center gap-2">
+                                        Attachment (Cloud Link)
+                                    </Label>
+                                    <Input
+                                        id="attachment"
+                                        value={attachment}
+                                        onChange={(e) => setAttachment(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="dueDate" className="text-gray-200 flex items-center gap-2">
+                                        Due Date
+                                    </Label>
+                                    <Input
+                                        type="date"
+                                        id="dueDate"
+                                        value={dueDate}
+                                        onChange={(e) => setDueDate(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="sectionName" className="text-gray-200 flex items-center gap-2">
+                                        Section Name
+                                    </Label>
+                                    <Input
+                                        id="sectionName"
+                                        value={sectionName}
+                                        onChange={(e) => setSectionName(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="courseCode" className="text-gray-200 flex items-center gap-2">
+                                        Course Code
+                                    </Label>
+                                    <Input
+                                        id="courseCode"
+                                        value={courseCode}
+                                        onChange={(e) => setCourseCode(e.target.value)}
+                                        className="bg-gray-700/50 text-gray-100 border-gray-600 focus:border-blue-500 focus:ring-blue-500"
+                                    />
+                                </div>
+                            </CardContent>
+                            <CardFooter className="flex justify-center space-x-4">
+                                <Button
+                                    onClick={handleCreateAssignment}
+                                    disabled={uploading}
+                                    className="w-full bg-blue-600 hover:bg-blue-700"
+                                >
+                                    {uploading ? 'Submitting...' : 'Create Assignment'}
+                                </Button>
+                            </CardFooter>
+                        </Card>
+                        {message && (
+                            <div className={`mt-4 p-2 rounded ${isSuccess ? "bg-green-600" : "bg-red-600"} text-white`}>
+                                {message}
                             </div>
-
-                            <Card className="bg-[#1E2530] border-0 p-6">
-                                <form onSubmit={handleSubmit} className="space-y-6">
-                                    <div className="space-y-2">
-                                        <Label htmlFor="assignmentId" className="text-gray-400">Assignment ID</Label>
-                                        <Input
-                                            id="assignmentId"
-                                            name="assignmentId"
-                                            placeholder="Enter Assignment ID"
-                                            required
-                                            className="bg-[#1B2028] border-gray-700 text-white"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="marks" className="text-gray-400">Marks</Label>
-                                        <Input
-                                            id="marks"
-                                            name="marks"
-                                            type="number"
-                                            placeholder="Enter marks (0-100)"
-                                            min="0"
-                                            max="100"
-                                            required
-                                            className="bg-[#1B2028] border-gray-700 text-white"
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label htmlFor="feedback" className="text-gray-400">Feedback</Label>
-                                        <Textarea
-                                            id="feedback"
-                                            name="feedback"
-                                            placeholder="Enter feedback for the student"
-                                            required
-                                            className="bg-[#1B2028] border-gray-700 text-white min-h-[100px]"
-                                        />
-                                    </div>
-
-                                    <Button
-                                        type="submit"
-                                        className="w-full bg-[#3B82F6] hover:bg-[#2563EB] text-white"
-                                        disabled={isSubmitting}
-                                    >
-                                        {isSubmitting ? 'Submitting...' : 'Submit Grade'}
-                                    </Button>
-                                </form>
-                            </Card>
-                        </div>
-                    </main>
-                </div>
-
-                {toast.show && (
-                    <Toast
-                        variant={toast.type === 'error' ? 'destructive' : 'default'}
-                        className={`${
-                            toast.type === 'error' ? 'bg-red-600 text-white' : 'bg-green-600 text-white'
-                        }`}
-                        onOpenChange={(open) => !open && setToast({ ...toast, show: false })}
-                    >
-                        <ToastTitle>{toast.type === 'error' ? 'Error' : 'Success'}</ToastTitle>
-                        <ToastDescription>{toast.message}</ToastDescription>
-                        <ToastClose />
-                    </Toast>
-                )}
-                <ToastViewport />
+                        )}
+                    </div>
+                </main>
             </div>
-        </ToastProvider>
+        </div>
     );
 }
